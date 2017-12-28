@@ -15,7 +15,7 @@ node {
         /* This builds the actual image; synonymous to
          * docker build on the command line */
         println('Build image stage');
-        app = docker.build("visumenu-1312/recorder_asterisk")
+        app = docker.build("proj-1312/recorder_asterisk")
 
     }
 
@@ -25,11 +25,11 @@ node {
          * Second, the 'latest' tag.
          * Pushing multiple tags is cheap, as all the layers are reused. */
 
-        docker.withRegistry('https://us.gcr.io', 'gcr:visumenu-1312') {
+        docker.withRegistry('https://us.gcr.io', 'gcr:proj-1312') {
             app.push("${env.BUILD_NUMBER}")
             app.push("latest")
         }
-        slackSend "Docker image is built and pushed to GCP <https://console.cloud.google.com/gcr/images/visumenu-1312/US/recorder_asterisk?project=visumenu-1312&gcrImageListsize=50|Container Registry>  "
+        slackSend "Docker image is built and pushed to GCP <https://console.cloud.google.com/gcr/images/proj-1312/US/recorder_asterisk?project=proj-1312&gcrImageListsize=50|Container Registry>  "
     }
    
     stage('Deploy the image to GCP'){
@@ -56,11 +56,11 @@ node {
         if (didTimeout) {
             // do something on timeout
             echo "no input was received before timeout"
-            slackSend "No input recived, deployment has been cancelled!!! But the DOCKER image is available in <https://console.cloud.google.com/gcr/images/visumenu-1312/US/recorder_asterisk?project=visumenu-1312&gcrImageListsize=50|GCP Container Registry> "
+            slackSend "No input recived, deployment has been cancelled!!! But the DOCKER image is available in <https://console.cloud.google.com/gcr/images/proj-1312/US/recorder_asterisk?project=proj-1312&gcrImageListsize=50|GCP Container Registry> "
         } else if ( userInput != false ) {
             echo ("input was received DB preffix: " +userInput)
             def InstanceName = "crawler$BUILD_NUMBER-"+userInput.trim()
-            sh '/usr/bin/gcloud beta compute --project "visumenu-1312" instances create "'+InstanceName+'" --zone "us-central1-a" --machine-type "n1-standard-1" --subnet "default" --metadata "gce-container-declaration=spec:\n  containers:\n    - name: '+InstanceName+'\n      image: us.gcr.io/visumenu-1312/recorder_asterisk:latest\n      securityContext:\n        privileged: true\n      env:\n        - name: ENVDBNAME\n          value: '+userInput+'\n      stdin: false\n      tty: true\n  restartPolicy: Always\n" --maintenance-policy "MIGRATE" --service-account "443184526722-compute@developer.gserviceaccount.com" --scopes "https://www.googleapis.com/auth/cloud-platform" --min-cpu-platform "Automatic" --tags "asterisk","http-server" --image "cos-stable-63-10032-71-0" --image-project "cos-cloud" --boot-disk-size "10" --boot-disk-type "pd-standard" --boot-disk-device-name "'+InstanceName+'"'
+            sh '/usr/bin/gcloud beta compute --project "proj-1312" instances create "'+InstanceName+'" --zone "us-central1-a" --machine-type "n1-standard-1" --subnet "default" --metadata "gce-container-declaration=spec:\n  containers:\n    - name: '+InstanceName+'\n      image: us.gcr.io/proj-1312/recorder_asterisk:latest\n      securityContext:\n        privileged: true\n      env:\n        - name: ENVDBNAME\n          value: '+userInput+'\n      stdin: false\n      tty: true\n  restartPolicy: Always\n" --maintenance-policy "MIGRATE" --service-account "443184526722-compute@developer.gserviceaccount.com" --scopes "https://www.googleapis.com/auth/cloud-platform" --min-cpu-platform "Automatic" --tags "asterisk","http-server" --image "cos-stable-63-10032-71-0" --image-project "cos-cloud" --boot-disk-size "10" --boot-disk-type "pd-standard" --boot-disk-device-name "'+InstanceName+'"'
             def WANIP = sh(returnStdout: true, script: "gcloud compute instances list --filter=\"name=('"+InstanceName+"')\" --format=text|grep '^networkInterfaces'|grep 'natIP:'|sed 's/^.* //g'").trim()
             echo ("Commit WANIP: "+WANIP)
 
@@ -74,7 +74,7 @@ node {
             currentBuild.result = 'SUCCESS'
             slackSend "The deployment was canceled!!!"
             slackSend "You can deploy the container with:"
-            slackSend "gcloud docker -- pull us.gcr.io/visumenu-1312/recorder_asterisk:latest"
+            slackSend "gcloud docker -- pull us.gcr.io/proj-1312/recorder_asterisk:latest"
             slackSend "Please don't forget to set environment variables to the container ENVDBNAME - DB name preffix"
         } 
        
