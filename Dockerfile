@@ -2,7 +2,7 @@
 FROM ubuntu:16.04
 
 # set maintainer
-LABEL maintainer "shevelevw@gmail.com"
+LABEL maintainer "shevelevw"
 # Set environment variables
 ENV DEBIAN_FRONTEND noninteractive
 ENV LC_ALL C.UTF-8
@@ -48,9 +48,9 @@ RUN apt-get -y install asterisk asterisk-config asterisk-core-sounds-en asterisk
 # ENV APACHE_LOCK_DIR /var/lock/apache2
 # ENV APACHE_PID_FILE /var/run/apache2.pid
 
-COPY ./etc/visumenu/ /etc/visumenu/
+COPY ./etc/proj/ /etc/proj/
 
-COPY ./usr/local/visumenu/ /usr/local/visumenu/
+COPY ./usr/local/proj/ /usr/local/proj/
 COPY ./var/lib/asterisk/ /var/lib/asterisk/
 RUN chown -R asterisk:asterisk /var/lib/asterisk/
 
@@ -87,4 +87,4 @@ EXPOSE 5060/udp
 EXPOSE 10000-20000/udp
 EXPOSE 443
 
-CMD ["/bin/bash","/usr/local/visumenu/startWOH.sh"]
+CMD ["/bin/bash","/startWOH.sh"]
